@@ -254,20 +254,24 @@ h1 {
 }
 
 .dessert-panel {
-  display: flex;
-  justify-content: space-between;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 1rem;
   margin-top: 1rem;
   padding: clamp(1rem, 3vw, 1.75rem);
 }
 
-.dessert-panel p:last-child {
+.extras-block {
+  display: grid;
+  gap: 0.5rem;
+}
+
+.extras-block p {
   color: #d8d2cc;
   line-height: 1.6;
 }
 
-.dessert-panel strong {
-  flex: 0 0 auto;
+.extras-block strong {
   color: #fff;
 }
 
