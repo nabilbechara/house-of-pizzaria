@@ -1,0 +1,281 @@
+@if (customizeItem) {
+  <div class="modal-overlay" (click)="closeCustomize()" role="dialog" aria-modal="true" aria-label="Customize item">
+    <div class="modal-card" (click)="$event.stopPropagation()">
+      <button class="modal-close" type="button" (click)="closeCustomize()" aria-label="Close">&#x2715;</button>
+
+      <p class="modal-eyebrow">{{ getCategoryName(customizeItem.categorySlug) }}</p>
+      <h3 class="modal-title">{{ customizeItem.name }}</h3>
+
+      @if (customizeItem.calories || customizeItem.proteinGrams) {
+        <p class="modal-nutrition">
+          {{ customizeItem.calories }} kcal
+          @if (customizeItem.proteinGrams) {
+            &nbsp;&middot;&nbsp;{{ customizeItem.proteinGrams }}g protein
+          }
+        </p>
+      }
+
+      @if (customizeItem.sizes.length > 1) {
+        <div class="modal-section">
+          <p class="modal-label">Size</p>
+          <div class="size-options">
+            @for (size of customizeItem.sizes; track size.label) {
+              <button
+                type="button"
+                class="size-btn"
+                [class.size-btn--active]="selectedSizeLabel === size.label"
+                (click)="selectedSizeLabel = size.label">
+                {{ size.label }} &mdash; {{ formatPrice(size) }}
+              </button>
+            }
+          </div>
+        </div>
+      }
+
+      @if (customizeItem.ingredients.length > 0) {
+        <div class="modal-section">
+          <p class="modal-label">Ingredients <span class="modal-hint">(uncheck to remove)</span></p>
+          <div class="ingredient-grid">
+            @for (ing of customizeItem.ingredients; track ing) {
+              <label class="ing-chip" [class.ing-chip--off]="!isIncluded(ing)">
+                <input type="checkbox" [checked]="isIncluded(ing)" (change)="toggleIngredient(ing)" />
+                {{ ing }}
+              </label>
+            }
+          </div>
+        </div>
+      }
+
+      <button class="modal-add-btn" type="button" (click)="confirmAdd()">
+        Add to Cart
+        @if (selectedSize) {
+          &mdash; {{ formatPrice(selectedSize) }}
+        }
+      </button>
+    </div>
+  </div>
+}
+
+<div class="splash" aria-hidden="true">
+  <img class="splash__image" src="/brand-wallpaper.jpeg" alt="" />
+</div>
+
+<main class="page-shell">
+  <section class="hero" aria-label="House of Pizza">
+    <img class="hero__background" src="/brand-wallpaper.jpeg" alt="" />
+    <div class="hero__shade"></div>
+
+    <nav class="topbar" aria-label="Primary">
+      <a class="topbar__brand" href="#top">House of Pizz<span>A</span></a>
+      <div class="topbar__links">
+        <a href="#original">Original</a>
+        <a href="#healthy">Healthy</a>
+        <a href="#dessert">Dessert</a>
+        <a href="#order">Order</a>
+      </div>
+      <a class="topbar__cart" href="#cart" aria-label="View cart">
+        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 2L3 6v14a2 2 0 002 2h14a2 2 0 002-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 01-8 0"/></svg>
+        @if (cart.count() > 0) {
+          <span class="cart-badge">{{ cart.count() }}</span>
+        }
+      </a>
+    </nav>
+
+    <div class="hero__content" id="top">
+      <p class="eyebrow">Made fresh daily</p>
+      <h1>House of PizzA</h1>
+      <p class="hero__copy">Original favorites, healthy protein pizza, fresh desserts, drinks, and dips from Daher El Souwan, El Maten.</p>
+      <div class="hero__actions" aria-label="Quick contact">
+        <a href="#order">Order Now</a>
+        <a href="https://www.instagram.com/houseof.pizza" target="_blank" rel="noreferrer">Instagram</a>
+      </div>
+    </div>
+  </section>
+
+  <section class="menu-section" aria-label="Menu">
+    <div class="menu-section__header">
+      <p class="eyebrow">Classic favorites, real results</p>
+      <h2>Menu</h2>
+    </div>
+
+    <div class="menu-grid">
+      <article class="menu-panel" id="original">
+        <div class="menu-panel__title">
+          <span>Original</span>
+          <strong>Pizza</strong>
+        </div>
+        @for (item of itemsBySlug('original-pizza'); track item.id) {
+          <div class="menu-item">
+            <div class="menu-item__top">
+              <h3>{{ item.name }}</h3>
+              <span>{{ formatPriceRange(item) }}</span>
+            </div>
+            <p>{{ item.ingredients.join(', ') }}</p>
+          </div>
+        }
+      </article>
+
+      <article class="menu-panel menu-panel--healthy" id="healthy">
+        <div class="menu-panel__title">
+          <span>Healthy</span>
+          <strong>Protein Pizza</strong>
+        </div>
+        @for (item of itemsBySlug('healthy-protein-pizza'); track item.id) {
+          <div class="menu-item">
+            <div class="menu-item__top">
+              <h3>{{ item.name }}</h3>
+              <span>{{ formatPriceRange(item) }}</span>
+            </div>
+            @if (item.calories || item.proteinGrams) {
+              <p class="nutrition">
+                {{ item.calories }} KCAL
+                @if (item.proteinGrams) { {{ item.proteinGrams }}G PROTEIN }
+              </p>
+            }
+            <p>{{ item.ingredients.join(', ') }}</p>
+          </div>
+        }
+      </article>
+    </div>
+
+    <article class="dessert-panel" id="dessert">
+      <div class="extras-block">
+        <p class="eyebrow">Dessert</p>
+        @for (item of itemsBySlug('dessert'); track item.id) {
+          <h2>{{ item.name }}</h2>
+          <p>{{ item.ingredients.join(', ') }}.</p>
+          <strong>{{ formatPriceRange(item) }}</strong>
+        }
+      </div>
+
+      <div class="extras-block">
+        <p class="eyebrow">Drinks</p>
+        <h2>Drinks</h2>
+        @for (item of itemsBySlug('drinks'); track item.id) {
+          <p>{{ item.name }} &mdash; {{ formatPriceRange(item) }}</p>
+        }
+      </div>
+
+      <div class="extras-block">
+        <p class="eyebrow">Dips</p>
+        <h2>Sauces</h2>
+        @for (item of itemsBySlug('dips'); track item.id) {
+          <p>{{ item.name }} &mdash; {{ formatPriceRange(item) }}</p>
+        }
+      </div>
+    </article>
+  </section>
+
+  <section class="order-section" id="order" aria-label="Order online">
+    <div class="order-section__header">
+      <div>
+        <p class="eyebrow">Order online</p>
+        <h2>Build your order</h2>
+      </div>
+      <a class="call-link" href="tel:81386932">Call 81 / 386 932</a>
+    </div>
+
+    <div class="order-layout">
+      <div class="order-groups" aria-label="Order menu">
+        @if (loading()) {
+          <p class="order-status">Loading menu&hellip;</p>
+        } @else if (loadError()) {
+          <p class="order-status order-status--error">Could not load menu. Make sure the backend is running on port 5266.</p>
+        }
+
+        @for (section of orderSections; track section.slug) {
+          @if (itemsBySlug(section.slug).length > 0) {
+            <section class="order-group" [attr.aria-label]="section.title">
+              <h3 class="section-title">{{ section.title }}</h3>
+              <div class="order-list">
+                @for (item of itemsBySlug(section.slug); track item.id) {
+                  <article class="order-card">
+                    <div class="order-card__body">
+                      @if (item.calories || item.proteinGrams) {
+                        <p class="order-card__nutrition">
+                          {{ item.calories }} kcal
+                          @if (item.proteinGrams) { &middot; {{ item.proteinGrams }}g protein }
+                        </p>
+                      }
+                      <h4>{{ item.name }}</h4>
+                      @if (item.ingredients.length > 0) {
+                        <p>{{ item.ingredients.join(', ') }}</p>
+                      }
+                    </div>
+                    <div class="order-card__actions">
+                      <span>{{ formatPriceRange(item) }}</span>
+                      @if (item.ingredients.length > 0 || item.sizes.length > 1) {
+                        <button type="button" (click)="openCustomize(item)">Customize</button>
+                      } @else {
+                        <button type="button" (click)="quickAdd(item)">Add +</button>
+                      }
+                    </div>
+                  </article>
+                }
+              </div>
+            </section>
+          }
+        }
+      </div>
+
+      <aside class="cart-panel" id="cart" aria-label="Cart">
+        <div class="cart-panel__top">
+          <div>
+            <p class="eyebrow">Your cart</p>
+            <h2>Order</h2>
+          </div>
+          @if (cart.items().length) {
+            <button class="text-button" type="button" (click)="cart.clear()">Clear</button>
+          }
+        </div>
+
+        @if (cart.items().length) {
+          <div class="cart-items">
+            @for (item of cart.items(); track item.key) {
+              <div class="cart-item">
+                <div>
+                  <strong>{{ item.name }}</strong>
+                  <span>{{ item.size.label }} &mdash; {{ formatPrice(item.size) }}</span>
+                  @if (item.excludedIngredients.length > 0) {
+                    <span class="cart-excluded">No: {{ item.excludedIngredients.join(', ') }}</span>
+                  }
+                </div>
+                <div class="qty-control" aria-label="Quantity">
+                  <button type="button" (click)="cart.changeQuantity(item.key, -1)">-</button>
+                  <span>{{ item.quantity }}</span>
+                  <button type="button" (click)="cart.changeQuantity(item.key, 1)">+</button>
+                </div>
+              </div>
+            }
+          </div>
+
+          <div class="cart-total">
+            <span>Total</span>
+            <strong>{{ cart.total() }}</strong>
+          </div>
+
+          <a class="checkout-button" routerLink="/checkout">Checkout &rarr;</a>
+        } @else {
+          <p class="empty-cart">Choose items from the menu and customize your order.</p>
+        }
+      </aside>
+    </div>
+  </section>
+
+  <footer class="footer">
+    <span>Daher El Souwan, El Maten</span>
+    <a href="https://www.instagram.com/houseof.pizza" target="_blank" rel="noreferrer">houseof.pizza</a>
+    <a href="tel:81386932">81 / 386 932</a>
+  </footer>
+</main>
+
+<a class="whatsapp-float" href="https://wa.me/96181386932?text=Hello%20House%20of%20PizzA!" target="_blank" rel="noreferrer" aria-label="Chat on WhatsApp">
+  <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
+</a>
+
+@if (cart.count() > 0) {
+  <div class="mobile-cart-bar">
+    <span>{{ cart.count() }} item{{ cart.count() !== 1 ? 's' : '' }} &middot; {{ cart.total() }}</span>
+    <a class="mobile-cart-bar__btn" routerLink="/checkout">Checkout</a>
+  </div>
+}
